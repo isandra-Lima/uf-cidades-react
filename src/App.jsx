@@ -7,19 +7,21 @@ function App() {
   const [cities,setCities] = useState([]);
   const [selectedUf, setSelectedUf] = useState("0");
   const [selectedcity, setSelectedCity] = useState("0");
+  const [infoUf, setInfoUf] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [loadingUf, setLoadingUf] = useState(false); // novo estado de carregamento
 
   useEffect(()=> {
     axios.get('https://brasilapi.com.br/api/ibge/uf/v1')
     .then(Response =>{
-    setUfs(Response.data);
+      setUfs(Response.data);
     });
   },[]);
-
 
   useEffect(()=> {
     axios.get(`https://brasilapi.com.br/api/ibge/municipios/v1/${selectedUf}?providers=dados-abertos-br,gov,wikipedia`)
     .then(Response =>{
-     setCities(Response.data);
+      setCities(Response.data);
     });
   },[selectedUf]);
 
@@ -28,37 +30,85 @@ function App() {
     setSelectedUf(uf);
   }
 
-   function handleSelectedcity(event) {
+  function handleSelectedcity(event) {
     const city = event.target.value;
     setSelectedCity(city);
   }
 
+  async function mostrarInfoUF() {
+    if (selectedUf === "0") {
+      alert("Selecione uma UF primeiro!");
+      return;
+    }
+
+    setLoadingUf(true);
+    setOpenModal(true); // abrir modal imediatamente
+    setInfoUf(null);    // limpar dados antigos
+
+    try {
+      const r = await axios.get(`https://brasilapi.com.br/api/ibge/uf/v1/${selectedUf}`);
+      setInfoUf(r.data);
+    } catch (err) {
+      console.log("Erro ao buscar UF:", err);
+    } finally {
+      setLoadingUf(false);
+    }
+  }
 
   return (
     <>
-    <h1>Seletor de Uf e Cidades</h1>
-    <div className='container'>
-      <select 
-        name='Uf' 
-        id='Uf'
-        onChange={handleSelectedUf}>
-        <option value="0">Selecione a UF</option>
-        {ufs.map(uf =>(
-          <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
-        ))}
-      </select>
+      <h1>Seletor de Uf e Cidades</h1>
+      <div className='container'>
+        <select 
+          name='Uf' 
+          id='Uf'
+          onChange={handleSelectedUf}>
+          <option value="0">Selecione a UF</option>
+          {ufs.map(uf =>(
+            <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
+          ))}
+        </select>
 
-      <select 
-        name='city' 
-        id='city' 
-        value = {selectedcity}
-        onChange={handleSelectedcity}>
-        <option value="0">Selecione a cidade</option>
-        {cities.map(city =>(
-          <option key={city.id} value={city.nome}>{city.nome}</option>
-        ))}
-      </select>
-    </div>
+        <select 
+          name='city' 
+          id='city' 
+          value={selectedcity}
+          onChange={handleSelectedcity}>
+          <option value="0">Selecione a cidade</option>
+          {cities.map(city =>(
+            <option key={city.id} value={city.nome}>{city.nome}</option>
+          ))}
+        </select>
+
+        <button type="button" onClick={mostrarInfoUF}>
+          Resultado
+        </button>
+      </div>
+
+      {openModal && (
+        <div className="fundo" onClick={() => setOpenModal(false)}>
+          <div className="caixa" onClick={(e) => e.stopPropagation()}>
+            <button className="fechar" onClick={() => setOpenModal(false)}>X</button>
+
+            <h2>Informações da UF</h2>
+
+            {loadingUf && <p>Carregando...</p>}  {/* fallback */}
+
+            {infoUf && (
+              <>
+                <p><b>ID:</b> {infoUf.id}</p>
+                <p><b>Sigla:</b> {infoUf.sigla}</p>
+                <p><b>Nome:</b> {infoUf.nome}</p>
+
+                <h3>Região</h3>
+                <p><b>ID:</b> {infoUf.regiao.id}</p>
+                <p><b>Sigla:</b> {infoUf.regiao.sigla}</p>
+                <p><b>Nome:</b> {infoUf.regiao.nome}</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }
