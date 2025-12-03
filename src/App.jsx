@@ -58,7 +58,7 @@ function App() {
     <>
       <header className="header">
         <img src="/logo.png" alt="SearchCity Logo" className="logo-img" />
-        <span className="api-text">API</span>
+        <p className="api-text">API</p>
       </header>
 
       <div className="content">
