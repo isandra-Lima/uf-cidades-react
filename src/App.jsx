@@ -64,7 +64,7 @@ function App() {
       <div className="content">
 
         <div className="left">
-          <h1>Encontre informações sobre<br></br>as Cidades do Brasil.</h1>
+          <h1>Encontre informações sobre<br></br>UF das Cidades do Brasil.</h1>
 
           <div className='container'>
             <select 
